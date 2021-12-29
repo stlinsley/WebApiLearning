@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Catalog.Entities;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -23,31 +24,34 @@ namespace Catalog.Repositories
             _itemsCollection = database.GetCollection<Item>(collectionName);
         }
 
-        public IEnumerable<Item> GetItems => _itemsCollection.Find(new BsonDocument()).ToList();
+        public async Task<IEnumerable<Item>> GetItemsAsync() {
 
-        public Item GetItem(Guid id)
-        {
-            var filter = _filterBuilder.Eq(item => item.Id, id);
-            return _itemsCollection.Find(filter).SingleOrDefault();
+         return await _itemsCollection.Find(new BsonDocument()).ToListAsync();
         }
 
-        public void CreateItem(Item item)
+        public async Task<Item> GetItemAsync(Guid id)
+        {
+            var filter = _filterBuilder.Eq(item => item.Id, id);
+            return await _itemsCollection.Find(filter).SingleOrDefaultAsync();
+        }
+
+        public async Task CreateItemAsync(Item item)
         {
             if (item is null)
             {
                 throw new ArgumentNullException(nameof(item));
             }
 
-            _itemsCollection.InsertOne(item);
+            await _itemsCollection.InsertOneAsync(item);
         }
 
-        public void DeleteItem(Guid id)
+        public async Task DeleteItem(Guid id)
         {
             var filter = _filterBuilder.Eq(item => item.Id, id);
-            _itemsCollection.DeleteOne(filter);
+            await _itemsCollection.DeleteOneAsync(filter);
         }        
 
-        public void UpdateItem(Item item)
+        public async Task UpdateItemAsync(Item item)
         {
             if (item is null)
             {
@@ -55,7 +59,7 @@ namespace Catalog.Repositories
             }
 
             var filter = _filterBuilder.Eq(existingItem => existingItem.Id, item.Id);
-            _itemsCollection.ReplaceOne(filter, item);
+            await _itemsCollection.ReplaceOneAsync(filter, item);
         }
     }
 }
